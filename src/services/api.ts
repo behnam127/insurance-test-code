@@ -10,7 +10,7 @@ const api = axios.create({
 });
 
 export type FormStructure = {
-    id: string;
+    formId: string;
     type: string;
     title: string;
     fields: FormField[];
@@ -55,7 +55,7 @@ export const insuranceApi = {
         const forms = response.data;
 
         forms.forEach((form: FormStructure) => {
-            if (form.id === 'home_insurance_application') {
+            if (form.formId === 'home_insurance_application') {
 
                 const securitySystemType = form.fields.find(f => f.id === 'security_system_type');
                 if (securitySystemType) {
@@ -65,7 +65,7 @@ export const insuranceApi = {
                         value: 'Yes'
                     };
                 }
-            } else if (form.id === 'car_insurance_application') {
+            } else if (form.formId === 'car_insurance_application') {
 
                 const accidentCount = form.fields.find(f => f.id === 'accident_count');
                 if (accidentCount) {
@@ -75,7 +75,7 @@ export const insuranceApi = {
                         value: 'Yes'
                     };
                 }
-            } else if (form.id === 'health_insurance_application') {
+            } else if (form.formId === 'health_insurance_application') {
 
                 const healthInfo = form.fields.find(f => f.id === 'health_info');
                 if (healthInfo && healthInfo.fields) {
