@@ -17,6 +17,7 @@ import {
 } from '@mui/material';
 import type { FormField, FormStructure } from '../types/form';
 import axios from 'axios';
+import { useFormPersistence, getStoredFormData } from '../hooks/useFormPersistence';
 
 interface DynamicFormProps {
   formStructure: FormStructure;
@@ -24,13 +25,15 @@ interface DynamicFormProps {
 }
 
 const DynamicForm: React.FC<DynamicFormProps> = ({ formStructure, onSubmit }) => {
-  const [formData, setFormData] = useState<Record<string, any>>({});
-  const [dynamicOptions, setDynamicOptions] = useState<Record<string, string[]>>({});
-  const [loading, setLoading] = useState<Record<string, boolean>>({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const previousFormData = useRef<Record<string, any>>({});
+  const [formData, setFormData] = useState<Record<string, any>>(() => {
 
-  useEffect(() => {
+    const storedData = getStoredFormData(formStructure.formId);
+    if (storedData) {
+      console.log('Initializing form with stored data:', storedData);
+      return storedData;
+    }
+
+
     const initialData: Record<string, any> = {};
     const initializeField = (field: FormField) => {
       if (field.type === 'group' && field.fields) {
@@ -40,13 +43,24 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ formStructure, onSubmit }) =>
       }
     };
     formStructure.fields.forEach(initializeField);
-    setFormData(initialData);
-    setIsSubmitted(false);
-    previousFormData.current = initialData;
-  }, [formStructure]);
+    console.log('Initializing empty form:', initialData);
+    return initialData;
+  });
+
+  const [dynamicOptions, setDynamicOptions] = useState<Record<string, string[]>>({});
+  const [loading, setLoading] = useState<Record<string, boolean>>({});
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const previousFormData = useRef<Record<string, any>>(formData);
+
+  useEffect(() => {
+    previousFormData.current = formData;
+  }, [formData]);
+
+  useFormPersistence(formStructure.formId, formData, isSubmitted);
 
   const handleChange = async (fieldId: string, value: any) => {
-    const newData = { ...previousFormData.current, [fieldId]: value };
+    console.log('Form field changed:', fieldId, value);
+    const newData = { ...formData, [fieldId]: value };
     
     const updateDependentFields = (fields: FormField[]) => {
       fields.forEach((field) => {
@@ -54,16 +68,13 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ formStructure, onSubmit }) =>
           updateDependentFields(field.fields);
         }
         if (field.dynamicOptions?.dependsOn === fieldId) {
-    
           newData[field.id] = '';
-    
           fetchDynamicOptions(field, newData);
         }
       });
     };
     
     updateDependentFields(formStructure.fields);
-    previousFormData.current = newData;
     setFormData(newData);
   };
 
@@ -307,23 +318,14 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ formStructure, onSubmit }) =>
     e.preventDefault();
     setIsSubmitted(true);
 
-    console.log('formData:', formData);
-    console.log('fields:', formStructure.fields);
-    const healthInfoGroup = formStructure.fields.find(f => f.id === 'health_info');
-    let smokingFrequencyField = null;
-    if (healthInfoGroup && healthInfoGroup.fields) {
-      smokingFrequencyField = healthInfoGroup.fields.find(f => f.id === 'smoking_frequency');
-      if (smokingFrequencyField) {
-        console.log('isFieldVisible(smoking_frequency):', isFieldVisible(smokingFrequencyField));
-      }
-    }
     const hasErr = hasErrors(formStructure.fields);
-    console.log('hasErrors:', hasErr);
+    console.log('Form submission - has errors:', hasErr);
 
     if (!hasErr) {
-      console.log('Submitting started!1.5');
+      console.log('Submitting form data:', formData);
       onSubmit(formData);
-
+      
+  
       const initialData: Record<string, any> = {};
       const initializeField = (field: FormField) => {
         if (field.type === 'group' && field.fields) {
