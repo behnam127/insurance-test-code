@@ -29,7 +29,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ formStructure, onSubmit }) =>
 
     const storedData = getStoredFormData(formStructure.formId);
     if (storedData) {
-      console.log('Initializing form with stored data:', storedData);
       return storedData;
     }
 
@@ -43,7 +42,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ formStructure, onSubmit }) =>
       }
     };
     formStructure.fields.forEach(initializeField);
-    console.log('Initializing empty form:', initialData);
     return initialData;
   });
 
@@ -59,7 +57,6 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ formStructure, onSubmit }) =>
   useFormPersistence(formStructure.formId, formData, isSubmitted);
 
   const handleChange = async (fieldId: string, value: any) => {
-    console.log('Form field changed:', fieldId, value);
     const newData = { ...formData, [fieldId]: value };
     
     const updateDependentFields = (fields: FormField[]) => {
@@ -319,13 +316,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({ formStructure, onSubmit }) =>
     setIsSubmitted(true);
 
     const hasErr = hasErrors(formStructure.fields);
-    console.log('Form submission - has errors:', hasErr);
 
     if (!hasErr) {
-      console.log('Submitting form data:', formData);
       onSubmit(formData);
       
-  
       const initialData: Record<string, any> = {};
       const initializeField = (field: FormField) => {
         if (field.type === 'group' && field.fields) {
