@@ -36,10 +36,6 @@ function AppContent() {
   
 
   const handleFormSubmit = async (data: any) => {
-    setNotification({
-      message: 'Submitting started!',
-      type: 'success',
-    });
     try {
       await insuranceApi.submitForm(data);
       await queryClient.invalidateQueries({ queryKey: ['submissions'] }); 
